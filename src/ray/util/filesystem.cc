@@ -25,7 +25,11 @@
 namespace ray {
 
 std::string GetFileName(const std::string &path) {
+#if defined(__APPLE__) && defined(__MACH__)
+  return boost::filesystem::path(path).filename().string();
+#else
   return std::filesystem::path(path).filename().string();
+#endif
 }
 
 std::string GetUserTempDir() {

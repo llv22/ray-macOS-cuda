@@ -137,7 +137,11 @@ std::string GetOriginalResourceNameFromWildcardResource(const std::string &resou
   }
 }
 
+#if defined(__APPLE__) && defined(__MACH__)
+absl::optional<PgFormattedResourceData> ParsePgFormattedResource(
+#else
 std::optional<PgFormattedResourceData> ParsePgFormattedResource(
+#endif
     const std::string &resource, bool for_wildcard_resource, bool for_indexed_resource) {
   // Check if it is a wildcard pg resource.
   PgFormattedResourceData data;

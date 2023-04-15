@@ -76,7 +76,11 @@ class BundleLocationIndex {
   const absl::optional<std::shared_ptr<BundleLocations> const> GetBundleLocationsOnNode(
       const NodeID &node_id) const;
 
+#if defined(__APPLE__) && defined(__MACH__)
+  absl::optional<NodeID> GetBundleLocation(const BundleID &bundle_id) const;
+#else
   std::optional<NodeID> GetBundleLocation(const BundleID &bundle_id) const;
+#endif
   /// Update the index to contain new node information. Should be used only when new node
   /// is added to the cluster.
   ///

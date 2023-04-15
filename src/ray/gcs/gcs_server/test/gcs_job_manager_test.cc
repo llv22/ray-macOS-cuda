@@ -76,8 +76,13 @@ class GcsJobManagerTest : public ::testing::Test {
 
 TEST_F(GcsJobManagerTest, TestFakeInternalKV) {
   fake_kv_->Put("ns", "key", "value", /*overwrite=*/true, /*callback=*/[](auto) {});
+#if defined(__APPLE__) && defined(__MACH__)
+  fake_kv_->Get(
+      "ns", "key", [](absl::optional<std::string> v) { ASSERT_EQ(v.value(), "value"); });
+#else
   fake_kv_->Get(
       "ns", "key", [](std::optional<std::string> v) { ASSERT_EQ(v.value(), "value"); });
+#endif
   fake_kv_->Put("ns", "key2", "value2", /*overwrite=*/true, /*callback=*/[](auto) {});
 
   fake_kv_->MultiGet("ns",

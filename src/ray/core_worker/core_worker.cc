@@ -1794,9 +1794,15 @@ void CoreWorker::BuildCommonTaskSpec(
       function.GetLanguage(),
       function.GetFunctionDescriptor(),
       job_id,
+#if defined(__APPLE__) && defined(__MACH__)
+      include_job_config
+          ? absl::optional<rpc::JobConfig>(worker_context_.GetCurrentJobConfig())
+          : absl::optional<rpc::JobConfig>(),
+#else
       include_job_config
           ? std::optional<rpc::JobConfig>(worker_context_.GetCurrentJobConfig())
           : std::optional<rpc::JobConfig>(),
+#endif
       current_task_id,
       task_index,
       caller_id,
@@ -2117,7 +2123,12 @@ Status CoreWorker::WaitPlacementGroupReady(const PlacementGroupID &placement_gro
   }
 }
 
+
+#if defined(__APPLE__) && defined(__MACH__)
+absl::optional<std::vector<rpc::ObjectReference>> CoreWorker::SubmitActorTask(
+#else
 std::optional<std::vector<rpc::ObjectReference>> CoreWorker::SubmitActorTask(
+#endif
     const ActorID &actor_id,
     const RayFunction &function,
     const std::vector<std::unique_ptr<TaskArg>> &args,
@@ -2127,7 +2138,11 @@ std::optional<std::vector<rpc::ObjectReference>> CoreWorker::SubmitActorTask(
   if (direct_actor_submitter_->PendingTasksFull(actor_id)) {
     RAY_LOG(DEBUG) << "Back pressure occurred while submitting the task to " << actor_id
                    << ". " << direct_actor_submitter_->DebugString(actor_id);
+#if defined(__APPLE__) && defined(__MACH__)
+    return absl::nullopt;
+#else
     return std::nullopt;
+#endif
   }
 
   auto actor_handle = actor_manager_->GetActorHandle(actor_id);
@@ -3180,9 +3195,15 @@ void CoreWorker::HandleUpdateObjectLocationBatch(
               ? node_id
               : NodeID::Nil(),
           object_location_update.has_generator_id()
+#if defined(__APPLE__) && defined(__MACH__)
+              ? absl::optional<ObjectID>(
+                    ObjectID::FromBinary(object_location_update.generator_id()))
+              : absl::nullopt);
+#else
               ? std::optional<ObjectID>(
                     ObjectID::FromBinary(object_location_update.generator_id()))
               : std::nullopt);
+#endif
     }
 
     if (object_location_update.has_plasma_location_update()) {
@@ -3209,7 +3230,11 @@ void CoreWorker::AddSpilledObjectLocationOwner(
     const ObjectID &object_id,
     const std::string &spilled_url,
     const NodeID &spilled_node_id,
+#if defined(__APPLE__) && defined(__MACH__)
+    const absl::optional<ObjectID> &generator_id) {
+#else
     const std::optional<ObjectID> &generator_id) {
+#endif
   RAY_LOG(DEBUG) << "Received object spilled location update for object " << object_id
                  << ", which has been spilled to " << spilled_url << " on node "
                  << spilled_node_id;

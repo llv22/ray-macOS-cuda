@@ -158,7 +158,11 @@ inline TaskOptions ToTaskOptions(JNIEnv *env, jint numReturns, jobject callOptio
 inline ActorCreationOptions ToActorCreationOptions(JNIEnv *env,
                                                    jobject actorCreationOptions) {
   std::string name = "";
+#if defined(__APPLE__) && defined(__MACH__)
+  absl::optional<bool> is_detached = absl::nullopt;
+#else
   std::optional<bool> is_detached = std::nullopt;
+#endif
   int64_t max_restarts = 0;
   int64_t max_task_retries = 0;
   std::unordered_map<std::string, double> resources;

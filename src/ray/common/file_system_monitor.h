@@ -16,7 +16,11 @@
 
 #include <gtest/gtest_prod.h>
 
+#if defined(__APPLE__) && defined(__MACH__)
+#include <boost/filesystem.hpp>
+#else
 #include <filesystem>
+#endif
 #include <optional>
 #include <string>
 #include <utility>
@@ -50,7 +54,11 @@ class FileSystemMonitor {
   /// \return std::filesystem::space_info if query succeeds; or return empty optional
   /// if error happens. Refer to https://en.cppreference.com/w/cpp/filesystem/space_info
   /// for struct details.
+#if defined(__APPLE__) && defined(__MACH__)
+  absl::optional<boost::filesystem::space_info> Space(const std::string &path) const;
+#else
   std::optional<std::filesystem::space_info> Space(const std::string &path) const;
+#endif
 
   /// Returns true if ANY path's disk usage is over the capacity threshold.
   bool OverCapacity() const;
@@ -58,8 +66,13 @@ class FileSystemMonitor {
  private:
   bool CheckIfAnyPathOverCapacity() const;
   // For testing purpose.
+#if defined(__APPLE__) && defined(__MACH__)
+  bool OverCapacityImpl(const std::string &path,
+                        const absl::optional<boost::filesystem::space_info> &info) const;
+#else
   bool OverCapacityImpl(const std::string &path,
                         const std::optional<std::filesystem::space_info> &info) const;
+#endif
 
  private:
   FRIEND_TEST(FileSystemTest, TestOverCapacity);

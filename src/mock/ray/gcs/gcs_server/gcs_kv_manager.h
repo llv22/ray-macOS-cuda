@@ -19,12 +19,21 @@ class MockInternalKVInterface : public ray::gcs::InternalKVInterface {
  public:
   MockInternalKVInterface() {}
 
+#if defined(__APPLE__) && defined(__MACH__)
+  MOCK_METHOD(void,
+              Get,
+              (const std::string &ns,
+               const std::string &key,
+               std::function<void(absl::optional<std::string>)> callback),
+              (override));
+#else
   MOCK_METHOD(void,
               Get,
               (const std::string &ns,
                const std::string &key,
                std::function<void(std::optional<std::string>)> callback),
               (override));
+#endif
   MOCK_METHOD(
       void,
       MultiGet,
@@ -73,9 +82,16 @@ class FakeInternalKVInterface : public ray::gcs::InternalKVInterface {
   // The C++ map.
   std::unordered_map<std::string, std::string> kv_store_ = {};
 
+
+#if defined(__APPLE__) && defined(__MACH__)
+  void Get(const std::string &ns,
+           const std::string &key,
+           std::function<void(absl::optional<std::string>)> callback) override {
+#else
   void Get(const std::string &ns,
            const std::string &key,
            std::function<void(std::optional<std::string>)> callback) override {
+#endif
     std::string full_key = ns + key;
     auto it = kv_store_.find(full_key);
     if (it == kv_store_.end()) {

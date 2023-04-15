@@ -52,8 +52,13 @@ struct ReporterInterface {
   /// \return std::nullopt if the reporter doesn't have such component or the current
   /// snapshot of the component is not newer the asked one. Otherwise, return the
   /// actual message.
+#if defined(__APPLE__) && defined(__MACH__)
+  virtual absl::optional<RaySyncMessage> CreateSyncMessage(
+      int64_t version_after, MessageType message_type) const = 0;
+#else
   virtual std::optional<RaySyncMessage> CreateSyncMessage(
       int64_t version_after, MessageType message_type) const = 0;
+#endif
   virtual ~ReporterInterface() {}
 };
 

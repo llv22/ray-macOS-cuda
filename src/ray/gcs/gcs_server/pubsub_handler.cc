@@ -99,12 +99,20 @@ void InternalPubSubHandler::HandleGcsSubscriberCommandBatch(
       gcs_publisher_->GetPublisher()->UnregisterSubscription(
           command.channel_type(),
           subscriber_id,
+#if defined(__APPLE__) && defined(__MACH__)
+          command.key_id().empty() ? absl::nullopt : absl::make_optional(command.key_id()));
+#else
           command.key_id().empty() ? std::nullopt : std::make_optional(command.key_id()));
+#endif
     } else if (command.has_subscribe_message()) {
       gcs_publisher_->GetPublisher()->RegisterSubscription(
           command.channel_type(),
           subscriber_id,
+#if defined(__APPLE__) && defined(__MACH__)
+          command.key_id().empty() ? absl::nullopt : absl::make_optional(command.key_id()));
+#else
           command.key_id().empty() ? std::nullopt : std::make_optional(command.key_id()));
+#endif
     } else {
       RAY_LOG(FATAL) << "Invalid command has received, "
                      << static_cast<int>(command.command_message_one_of_case())

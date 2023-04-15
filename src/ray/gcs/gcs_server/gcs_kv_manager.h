@@ -37,7 +37,11 @@ class InternalKVInterface {
   /// \param callback Returns the value or null if the key doesn't exist.
   virtual void Get(const std::string &ns,
                    const std::string &key,
+#if defined(__APPLE__) && defined(__MACH__)
+                   std::function<void(absl::optional<std::string>)> callback) = 0;
+#else
                    std::function<void(std::optional<std::string>)> callback) = 0;
+#endif
 
   /// Get the values associated with `keys`.
   ///

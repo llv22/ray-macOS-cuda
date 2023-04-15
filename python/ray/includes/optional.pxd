@@ -2,7 +2,7 @@
 # See: https://github.com/cython/cython/pull/3294
 from libcpp cimport bool
 
-cdef extern from "<optional>" namespace "std" nogil:
+cdef extern from "<optional>" namespace "absl" nogil:
     cdef cppclass nullopt_t:
         nullopt_t()
 

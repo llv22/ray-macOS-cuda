@@ -66,7 +66,11 @@ ObjectID NativeTaskSubmitter::Submit(InvocationSpec &invocation,
   options.name = call_options.name;
   options.resources = call_options.resources;
   options.serialized_runtime_env_info = call_options.serialized_runtime_env_info;
+#if defined(__APPLE__) && defined(__MACH__)
+  absl::optional<std::vector<rpc::ObjectReference>> return_refs;
+#else
   std::optional<std::vector<rpc::ObjectReference>> return_refs;
+#endif
   if (invocation.task_type == TaskType::ACTOR_TASK) {
     return_refs = core_worker.SubmitActorTask(
         invocation.actor_id, BuildRayFunction(invocation), invocation.args, options);
@@ -130,7 +134,11 @@ ActorID NativeTaskSubmitter::CreateActor(InvocationSpec &invocation,
       create_options.resources,
       resources,
       /*dynamic_worker_options=*/{},
+#if defined(__APPLE__) && defined(__MACH__)
+      /*is_detached=*/absl::nullopt,
+#else
       /*is_detached=*/std::nullopt,
+#endif
       name,
       ray_namespace,
       /*is_asyncio=*/false,

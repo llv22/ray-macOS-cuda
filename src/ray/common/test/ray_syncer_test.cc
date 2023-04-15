@@ -66,14 +66,26 @@ class RaySyncerTest : public ::testing::Test {
       auto &reporter = reporters_[cid];
       reporter = std::make_unique<MockReporterInterface>();
       auto take_snapshot =
+#if defined(__APPLE__) && defined(__MACH__)
+          [this, cid](int64_t curr_version) mutable -> absl::optional<RaySyncMessage> {
+#else
           [this, cid](int64_t curr_version) mutable -> std::optional<RaySyncMessage> {
+#endif
         if (curr_version >= local_versions_[cid]) {
+#if defined(__APPLE__) && defined(__MACH__)
+      return absl::nullopt;
+#else
           return std::nullopt;
+#endif
         } else {
           auto msg = RaySyncMessage();
           msg.set_message_type(static_cast<MessageType>(cid));
           msg.set_version(++local_versions_[cid]);
+#if defined(__APPLE__) && defined(__MACH__)
+          return absl::make_optional(std::move(msg));
+#else
           return std::make_optional(std::move(msg));
+#endif
         }
       };
       ON_CALL(*reporter, CreateSyncMessage(_, _))
@@ -242,9 +254,17 @@ struct SyncerServerTest {
           .WillRepeatedly(WithArg<0>(Invoke(snapshot_received)));
       auto &reporter = reporters[cid];
       auto take_snapshot =
+#if defined(__APPLE__) && defined(__MACH__)
+          [this, cid](int64_t version_after) mutable -> absl::optional<RaySyncMessage> {
+#else
           [this, cid](int64_t version_after) mutable -> std::optional<RaySyncMessage> {
+#endif
         if (local_versions[cid] <= version_after) {
+#if defined(__APPLE__) && defined(__MACH__)
+          return absl::nullopt;
+#else
           return std::nullopt;
+#endif
         } else {
           auto msg = RaySyncMessage();
           msg.set_message_type(static_cast<MessageType>(cid));

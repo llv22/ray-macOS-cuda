@@ -30,7 +30,11 @@ void GcsInternalKVManager::HandleInternalKVGet(
   if (!status.ok()) {
     GCS_RPC_SEND_REPLY(send_reply_callback, reply, status);
   } else {
+#if defined(__APPLE__) && defined(__MACH__)
+    auto callback = [reply, send_reply_callback](absl::optional<std::string> val) {
+#else
     auto callback = [reply, send_reply_callback](std::optional<std::string> val) {
+#endif
       if (val) {
         reply->set_value(*val);
         GCS_RPC_SEND_REPLY(send_reply_callback, reply, Status::OK());

@@ -147,8 +147,13 @@ class LocalResourceManager : public syncer::ReporterInterface {
   /// \return true, if exist. otherwise, false.
   bool ResourcesExist(scheduling::ResourceID resource_id) const;
 
+#if defined(__APPLE__) && defined(__MACH__)
+  absl::optional<syncer::RaySyncMessage> CreateSyncMessage(
+      int64_t after_version, syncer::MessageType message_type) const override;
+#else
   std::optional<syncer::RaySyncMessage> CreateSyncMessage(
       int64_t after_version, syncer::MessageType message_type) const override;
+#endif
 
   /// Record the metrics.
   void RecordMetrics() const;

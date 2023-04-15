@@ -16,7 +16,11 @@
 
 #include <cctype>
 #include <csignal>
+#if defined(__APPLE__) && defined(__MACH__)
+#include <boost/filesystem.hpp>
+#else
 #include <filesystem>
+#endif
 #include <fstream>
 #include <memory>
 
@@ -2785,7 +2789,11 @@ void NodeManager::ConsumeSyncMessage(
   }
 }
 
+#if defined(__APPLE__) && defined(__MACH__)
+absl::optional<syncer::RaySyncMessage> NodeManager::CreateSyncMessage(
+#else
 std::optional<syncer::RaySyncMessage> NodeManager::CreateSyncMessage(
+#endif
     int64_t after_version, syncer::MessageType message_type) const {
   RAY_CHECK(message_type == syncer::MessageType::COMMANDS);
 
@@ -2799,7 +2807,11 @@ std::optional<syncer::RaySyncMessage> NodeManager::CreateSyncMessage(
   std::string serialized_msg;
   RAY_CHECK(resources_data.SerializeToString(&serialized_msg));
   msg.set_sync_message(std::move(serialized_msg));
+#if defined(__APPLE__) && defined(__MACH__)
+  return absl::make_optional(std::move(msg));
+#else
   return std::make_optional(std::move(msg));
+#endif
 }
 
 void NodeManager::PublishInfeasibleTaskError(const RayTask &task) const {

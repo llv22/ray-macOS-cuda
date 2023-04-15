@@ -18,7 +18,11 @@
 #include <ray/api/ray_runtime_holder.h>
 
 #include <boost/dll.hpp>
+#if defined(__APPLE__) && defined(__MACH__)
+#include <boost/filesystem.hpp>
+#else
 #include <filesystem>
+#endif
 #include <memory>
 #include <msgpack.hpp>
 #include <string>
@@ -42,7 +46,11 @@ class FunctionHelper {
     return *instance;
   }
 
+#if defined(__APPLE__) && defined(__MACH__)
+  void LoadDll(const boost::filesystem::path &lib_path);
+#else
   void LoadDll(const std::filesystem::path &lib_path);
+#endif
   void LoadFunctionsFromPaths(const std::vector<std::string> &paths);
   const EntryFuntion &GetExecutableFunctions(const std::string &function_name);
   const EntryFuntion &GetExecutableMemberFunctions(const std::string &function_name);

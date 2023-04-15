@@ -797,11 +797,20 @@ class CoreWorker : public rpc::CoreWorkerServiceHandler {
   /// \param[in] args Arguments of this task.
   /// \param[in] task_options Options for this task.
   /// \return ObjectRefs returned by this task.
+  
+#if defined(__APPLE__) && defined(__MACH__)
+  absl::optional<std::vector<rpc::ObjectReference>> SubmitActorTask(
+      const ActorID &actor_id,
+      const RayFunction &function,
+      const std::vector<std::unique_ptr<TaskArg>> &args,
+      const TaskOptions &task_options);
+#else
   std::optional<std::vector<rpc::ObjectReference>> SubmitActorTask(
       const ActorID &actor_id,
       const RayFunction &function,
       const std::vector<std::unique_ptr<TaskArg>> &args,
       const TaskOptions &task_options);
+#endif
 
   /// Tell an actor to exit immediately, without completing outstanding work.
   ///
@@ -1336,10 +1345,18 @@ class CoreWorker : public rpc::CoreWorkerServiceHandler {
   /// messages.
   void ProcessPubsubCommands(const Commands &commands, const NodeID &subscriber_id);
 
+
+#if defined(__APPLE__) && defined(__MACH__)
+  void AddSpilledObjectLocationOwner(const ObjectID &object_id,
+                                     const std::string &spilled_url,
+                                     const NodeID &spilled_node_id,
+                                     const absl::optional<ObjectID> &generator_id);
+#else
   void AddSpilledObjectLocationOwner(const ObjectID &object_id,
                                      const std::string &spilled_url,
                                      const NodeID &spilled_node_id,
                                      const std::optional<ObjectID> &generator_id);
+#endif
 
   void AddObjectLocationOwner(const ObjectID &object_id, const NodeID &node_id);
 

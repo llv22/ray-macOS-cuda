@@ -68,7 +68,11 @@ ActorID CreateActorHelper(std::unordered_map<std::string, double> &resources,
                                      resources,
                                      resources,
                                      {},
+#if defined(__APPLE__) && defined(__MACH__)
+                                     /*is_detached=*/absl::make_optional<bool>(false),
+#else
                                      /*is_detached=*/std::make_optional<bool>(false),
+#endif
                                      name,
                                      ray_namespace,
                                      /*is_asyncio=*/false,
@@ -519,7 +523,11 @@ TEST_F(ZeroNodeTest, TestTaskSpecPerf) {
                                      resources,
                                      resources,
                                      {},
+#if defined(__APPLE__) && defined(__MACH__)
+                                     /*is_detached=*/absl::make_optional<bool>(false),
+#else
                                      /*is_detached=*/std::make_optional<bool>(false),
+#endif
                                      name,
                                      ray_namespace,
                                      /*is_asyncio=*/false,

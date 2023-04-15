@@ -134,16 +134,28 @@ BundleLocationIndex::GetBundleLocationsOnNode(const NodeID &node_id) const {
   return it->second;
 }
 
+#if defined(__APPLE__) && defined(__MACH__)
+absl::optional<NodeID> BundleLocationIndex::GetBundleLocation(
+#else
 std::optional<NodeID> BundleLocationIndex::GetBundleLocation(
+#endif
     const BundleID &bundle_id) const {
   auto all_bundle_locations_opt = GetBundleLocations(bundle_id.first);
   if (all_bundle_locations_opt) {
     const auto &iter = (*all_bundle_locations_opt)->find(bundle_id);
     if (iter != (*all_bundle_locations_opt)->end()) {
+#if defined(__APPLE__) && defined(__MACH__)
+      return absl::make_optional(iter->second.first);
+#else
       return std::make_optional(iter->second.first);
+#endif
     }
   }
+#if defined(__APPLE__) && defined(__MACH__)
+  return absl::nullopt;
+#else
   return std::nullopt;
+#endif
 }
 
 void BundleLocationIndex::AddNodes(

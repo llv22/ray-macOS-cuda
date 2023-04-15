@@ -90,7 +90,11 @@ struct ActorCreationOptions {
                        const std::unordered_map<std::string, double> &resources,
                        const std::unordered_map<std::string, double> &placement_resources,
                        const std::vector<std::string> &dynamic_worker_options,
+#if defined(__APPLE__) && defined(__MACH__)
+                       absl::optional<bool> is_detached,
+#else
                        std::optional<bool> is_detached,
+#endif
                        std::string &name,
                        std::string &ray_namespace,
                        bool is_asyncio,
@@ -134,7 +138,11 @@ struct ActorCreationOptions {
   const std::vector<std::string> dynamic_worker_options;
   /// Whether to keep the actor persistent after driver exit. If true, this will set
   /// the worker to not be destroyed after the driver shutdown.
+#if defined(__APPLE__) && defined(__MACH__)
+  absl::optional<bool> is_detached;
+#else
   std::optional<bool> is_detached;
+#endif
   /// The name to give this detached actor that can be used to get a handle to it from
   /// other drivers. This must be globally unique across the cluster.
   /// This should set if and only if is_detached is true.

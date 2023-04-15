@@ -24,11 +24,19 @@ namespace ray {
 
 ClusterResourceManager::ClusterResourceManager() : nodes_{} {}
 
+#if defined(__APPLE__) && defined(__MACH__)
+absl::optional<absl::Time> ClusterResourceManager::GetNodeResourceModifiedTs(
+#else
 std::optional<absl::Time> ClusterResourceManager::GetNodeResourceModifiedTs(
+#endif
     scheduling::NodeID node_id) const {
   auto iter = nodes_.find(node_id);
   if (iter == nodes_.end()) {
+#if defined(__APPLE__) && defined(__MACH__)
+    return absl::nullopt;
+#else
     return std::nullopt;
+#endif
   }
   return iter->second.GetViewModifiedTs();
 }

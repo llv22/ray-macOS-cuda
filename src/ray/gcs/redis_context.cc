@@ -166,7 +166,11 @@ size_t CallbackReply::ReadAsScanArray(std::vector<std::string> *array) const {
   return next_scan_cursor_reply_;
 }
 
+#if defined(__APPLE__) && defined(__MACH__)
+const std::vector<absl::optional<std::string>> &CallbackReply::ReadAsStringArray() const {
+#else
 const std::vector<std::optional<std::string>> &CallbackReply::ReadAsStringArray() const {
+#endif
   RAY_CHECK(reply_type_ == REDIS_REPLY_ARRAY) << "Unexpected type: " << reply_type_;
   return string_array_reply_;
 }

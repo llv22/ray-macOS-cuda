@@ -48,7 +48,11 @@ namespace rpc {
 inline std::shared_ptr<grpc::Channel> BuildChannel(
     const std::string &address,
     int port,
+#if defined(__APPLE__) && defined(__MACH__)
+    absl::optional<grpc::ChannelArguments> arguments = absl::nullopt) {
+#else
     std::optional<grpc::ChannelArguments> arguments = std::nullopt) {
+#endif
   if (!arguments.has_value()) {
     arguments = grpc::ChannelArguments();
   }

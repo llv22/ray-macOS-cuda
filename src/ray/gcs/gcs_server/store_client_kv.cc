@@ -54,7 +54,11 @@ StoreClientInternalKV::StoreClientInternalKV(std::unique_ptr<StoreClient> store_
 void StoreClientInternalKV::Get(
     const std::string &ns,
     const std::string &key,
+#if defined(__APPLE__) && defined(__MACH__)
+    std::function<void(absl::optional<std::string>)> callback) {
+#else
     std::function<void(std::optional<std::string>)> callback) {
+#endif
   if (!callback) {
     callback = [](auto) {};
   }
@@ -62,8 +66,13 @@ void StoreClientInternalKV::Get(
       table_name_,
       MakeKey(ns, key),
       [callback = std::move(callback)](auto status, auto result) {
+#if defined(__APPLE__) && defined(__MACH__)
+        callback(result.has_value() ? absl::optional<std::string>(result.value())
+                                    : absl::optional<std::string>());
+#else
         callback(result.has_value() ? std::optional<std::string>(result.value())
                                     : std::optional<std::string>());
+#endif                          
       }));
 }
 

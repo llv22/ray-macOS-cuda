@@ -16,7 +16,11 @@
 
 #include <boost/range.hpp>
 #include <csignal>
+#if defined(__APPLE__) && defined(__MACH__)
+#include <boost/filesystem.hpp>
+#else
 #include <filesystem>
+#endif
 #include <fstream>
 #include <set>
 #include <thread>
@@ -177,7 +181,11 @@ class EventTest : public ::testing::Test {
 
   virtual void TearDown() {
     TestEventReporter::event_list.clear();
+#if defined(__APPLE__) && defined(__MACH__)
+    boost::filesystem::remove_all(log_dir.c_str());
+#else
     std::filesystem::remove_all(log_dir.c_str());
+#endif
     EventManager::Instance().ClearReporters();
     ray::RayEventContext::Instance().ResetEventContext();
   }
@@ -423,8 +431,13 @@ TEST_F(EventTest, TestLogRotate) {
   }
 
   int cnt = 0;
+#if defined(__APPLE__) && defined(__MACH__)
+  for (auto &entry :
+       boost::make_iterator_range(boost::filesystem::directory_iterator(log_dir), {})) {
+#else
   for (auto &entry :
        boost::make_iterator_range(std::filesystem::directory_iterator(log_dir), {})) {
+#endif
     if (entry.path().string().find("event_RAYLET") != std::string::npos) {
       cnt++;
     }
@@ -607,7 +620,11 @@ TEST_F(EventTest, TestLogEvent) {
   EXPECT_THAT(vc[1], testing::HasSubstr("Event"));
   EXPECT_THAT(vc[1], testing::HasSubstr("test fatal"));
 
+#if defined(__APPLE__) && defined(__MACH__)
+  boost::filesystem::remove_all(log_dir.c_str());
+#else
   std::filesystem::remove_all(log_dir.c_str());
+#endif
 
   // Set log level smaller than event level.
   ray::RayLog::StartRayLog("event_test", ray::RayLogLevel::INFO, log_dir);

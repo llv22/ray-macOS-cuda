@@ -24,7 +24,11 @@ namespace pubsub {
 
 bool SubscriberChannel::Subscribe(
     const rpc::Address &publisher_address,
+#if defined(__APPLE__) && defined(__MACH__)
+    const absl::optional<std::string> &key_id,
+#else
     const std::optional<std::string> &key_id,
+#endif
     SubscriptionItemCallback subscription_callback,
     SubscriptionFailureCallback subscription_failure_callback) {
   cum_subscribe_requests_++;
@@ -49,7 +53,11 @@ bool SubscriberChannel::Subscribe(
 }
 
 bool SubscriberChannel::Unsubscribe(const rpc::Address &publisher_address,
+#if defined(__APPLE__) && defined(__MACH__)
+                                    const absl::optional<std::string> &key_id) {
+#else
                                     const std::optional<std::string> &key_id) {
+#endif
   cum_unsubscribe_requests_++;
   const auto publisher_id = PublisherID::FromBinary(publisher_address.worker_id());
 
@@ -253,7 +261,11 @@ bool Subscriber::SubscribeChannel(
   return SubscribeInternal(std::move(sub_message),
                            channel_type,
                            publisher_address,
+#if defined(__APPLE__) && defined(__MACH__)
+                           absl::nullopt,
+#else
                            std::nullopt,
+#endif
                            std::move(subscribe_done_callback),
                            std::move(subscription_callback),
                            std::move(subscription_failure_callback));
@@ -287,8 +299,11 @@ bool Subscriber::UnsubscribeChannel(const rpc::ChannelType channel_type,
   const auto publisher_id = PublisherID::FromBinary(publisher_address.worker_id());
   commands_[publisher_id].emplace(std::move(command));
   SendCommandBatchIfPossible(publisher_address);
-
+#if defined(__APPLE__) && defined(__MACH__)
+  return Channel(channel_type)->Unsubscribe(publisher_address, absl::nullopt);
+#else
   return Channel(channel_type)->Unsubscribe(publisher_address, std::nullopt);
+#endif
 }
 
 bool Subscriber::IsSubscribed(const rpc::ChannelType channel_type,
@@ -306,7 +321,11 @@ bool Subscriber::SubscribeInternal(
     std::unique_ptr<rpc::SubMessage> sub_message,
     const rpc::ChannelType channel_type,
     const rpc::Address &publisher_address,
+#if defined(__APPLE__) && defined(__MACH__)
+    const absl::optional<std::string> &key_id,
+#else
     const std::optional<std::string> &key_id,
+#endif
     SubscribeDoneCallback subscribe_done_callback,
     SubscriptionItemCallback subscription_callback,
     SubscriptionFailureCallback subscription_failure_callback) {

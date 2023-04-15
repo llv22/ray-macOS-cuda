@@ -22,7 +22,11 @@
 namespace ray {
 namespace internal {
 
+#if defined(__APPLE__) && defined(__MACH__)
+void FunctionHelper::LoadDll(const boost::filesystem::path &lib_path) {
+#else
 void FunctionHelper::LoadDll(const std::filesystem::path &lib_path) {
+#endif
   RAY_LOG(INFO) << "Start loading the library " << lib_path << ".";
 
   auto it = libraries_.find(lib_path.string());
@@ -30,8 +34,13 @@ void FunctionHelper::LoadDll(const std::filesystem::path &lib_path) {
     return;
   }
 
+#if defined(__APPLE__) && defined(__MACH__)
+  RAY_CHECK(boost::filesystem::exists(lib_path))
+      << lib_path << " dynamic library not found.";
+#else
   RAY_CHECK(std::filesystem::exists(lib_path))
       << lib_path << " dynamic library not found.";
+#endif
 
   std::shared_ptr<boost::dll::shared_library> lib = nullptr;
   try {
@@ -118,8 +127,13 @@ std::string FunctionHelper::LoadAllRemoteFunctions(const std::string lib_path,
   return names_str;
 }
 
+#if defined(__APPLE__) && defined(__MACH__)
+void FindDynamicLibrary(boost::filesystem::path path,
+                        std::list<boost::filesystem::path> &dynamic_libraries) {
+#else
 void FindDynamicLibrary(std::filesystem::path path,
                         std::list<std::filesystem::path> &dynamic_libraries) {
+#endif
 #if defined(_WIN32)
   static const std::unordered_set<std::string> dynamic_library_extension = {".dll"};
 #elif __APPLE__
@@ -136,6 +150,22 @@ void FindDynamicLibrary(std::filesystem::path path,
 }
 
 void FunctionHelper::LoadFunctionsFromPaths(const std::vector<std::string> &paths) {
+#if defined(__APPLE__) && defined(__MACH__)
+  std::list<boost::filesystem::path> dynamic_libraries;
+  // Lookup dynamic libraries from paths.
+  for (auto path : paths) {
+    if (boost::filesystem::is_directory(path)) {
+      for (auto &entry :
+           boost::make_iterator_range(boost::filesystem::directory_iterator(path), {})) {
+        FindDynamicLibrary(entry, dynamic_libraries);
+      }
+    } else if (boost::filesystem::exists(path)) {
+      FindDynamicLibrary(path, dynamic_libraries);
+    } else {
+      RAY_LOG(FATAL) << path << " dynamic library not found.";
+    }
+  }
+#else
   std::list<std::filesystem::path> dynamic_libraries;
   // Lookup dynamic libraries from paths.
   for (auto path : paths) {
@@ -150,6 +180,7 @@ void FunctionHelper::LoadFunctionsFromPaths(const std::vector<std::string> &path
       RAY_LOG(FATAL) << path << " dynamic library not found.";
     }
   }
+#endif
 
   // Try to load all found libraries.
   for (auto lib : dynamic_libraries) {

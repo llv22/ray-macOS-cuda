@@ -62,7 +62,11 @@ class CallbackReply {
   const std::string &ReadAsPubsubData() const;
 
   /// Read this reply data as a string array.
+#if defined(__APPLE__) && defined(__MACH__)
+  [[nodiscard]] const std::vector<absl::optional<std::string>> &ReadAsStringArray() const;
+#else
   [[nodiscard]] const std::vector<std::optional<std::string>> &ReadAsStringArray() const;
+#endif
 
   /// Read this reply data as a scan array.
   ///
@@ -91,7 +95,11 @@ class CallbackReply {
 
   /// Reply data if reply_type_ is REDIS_REPLY_ARRAY.
   /// Represent the reply of StringArray or ScanArray.
+#if defined(__APPLE__) && defined(__MACH__)
+  std::vector<absl::optional<std::string>> string_array_reply_;
+#else
   std::vector<std::optional<std::string>> string_array_reply_;
+#endif
 
   /// Represent the reply of SCanArray, means the next scan cursor for scan request.
   size_t next_scan_cursor_reply_{0};

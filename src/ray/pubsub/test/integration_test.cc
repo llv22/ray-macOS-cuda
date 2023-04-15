@@ -68,15 +68,27 @@ class SubscriberServiceImpl final : public rpc::SubscriberService::CallbackServi
       if (command.has_unsubscribe_message()) {
         publisher_->UnregisterSubscription(command.channel_type(),
                                            subscriber_id,
+#if defined(__APPLE__) && defined(__MACH__)
+                                           command.key_id().empty()
+                                               ? absl::nullopt
+                                               : absl::make_optional(command.key_id()));
+#else
                                            command.key_id().empty()
                                                ? std::nullopt
                                                : std::make_optional(command.key_id()));
+#endif                                        
       } else if (command.has_subscribe_message()) {
         publisher_->RegisterSubscription(command.channel_type(),
                                          subscriber_id,
+#if defined(__APPLE__) && defined(__MACH__)
+                                         command.key_id().empty()
+                                             ? absl::nullopt
+                                             : absl::make_optional(command.key_id()));
+#else
                                          command.key_id().empty()
                                              ? std::nullopt
                                              : std::make_optional(command.key_id()));
+#endif                                             
       } else {
         RAY_LOG(FATAL)
             << "Invalid command has received, "

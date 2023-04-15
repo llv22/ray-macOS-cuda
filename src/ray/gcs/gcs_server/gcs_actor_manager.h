@@ -227,7 +227,11 @@ class GcsActor {
   /// Whether the actor's target node only grants or rejects the lease request.
   bool grant_or_reject_ = false;
   /// The last recorded metric state.
+#if defined(__APPLE__) && defined(__MACH__)
+  absl::optional<rpc::ActorTableData::ActorState> last_metric_state_;
+#else
   std::optional<rpc::ActorTableData::ActorState> last_metric_state_;
+#endif
 };
 
 using RegisterActorCallback = std::function<void(std::shared_ptr<GcsActor>)>;

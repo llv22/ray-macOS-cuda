@@ -53,16 +53,30 @@ namespace pubsub {
 
 class MockPublisherInterface : public PublisherInterface {
  public:
+  MOCK_METHOD(void, Publish, (const rpc::PubMessage &pub_message), (override));
+  MOCK_METHOD(void,
+              PublishFailure,
+              (const rpc::ChannelType channel_type, const std::string &key_id),
+              (override));
+#if defined(__APPLE__) && defined(__MACH__)
+  MOCK_METHOD(bool,
+              RegisterSubscription,
+              (const rpc::ChannelType channel_type,
+               const SubscriberID &subscriber_id,
+               const absl::optional<std::string> &key_id),
+              (override));
+  MOCK_METHOD(bool,
+              UnregisterSubscription,
+              (const rpc::ChannelType channel_type,
+               const SubscriberID &subscriber_id,
+               const absl::optional<std::string> &key_id),
+              (override));
+#else
   MOCK_METHOD(bool,
               RegisterSubscription,
               (const rpc::ChannelType channel_type,
                const SubscriberID &subscriber_id,
                const std::optional<std::string> &key_id),
-              (override));
-  MOCK_METHOD(void, Publish, (const rpc::PubMessage &pub_message), (override));
-  MOCK_METHOD(void,
-              PublishFailure,
-              (const rpc::ChannelType channel_type, const std::string &key_id),
               (override));
   MOCK_METHOD(bool,
               UnregisterSubscription,
@@ -70,6 +84,7 @@ class MockPublisherInterface : public PublisherInterface {
                const SubscriberID &subscriber_id,
                const std::optional<std::string> &key_id),
               (override));
+#endif
 };
 
 }  // namespace pubsub
@@ -80,16 +95,30 @@ namespace pubsub {
 
 class MockPublisher : public Publisher {
  public:
+  MOCK_METHOD(void, Publish, (const rpc::PubMessage &pub_message), (override));
+  MOCK_METHOD(void,
+              PublishFailure,
+              (const rpc::ChannelType channel_type, const std::string &key_id),
+              (override));
+#if defined(__APPLE__) && defined(__MACH__)
+  MOCK_METHOD(bool,
+              RegisterSubscription,
+              (const rpc::ChannelType channel_type,
+               const SubscriberID &subscriber_id,
+               const absl::optional<std::string> &key_id),
+              (override));
+  MOCK_METHOD(bool,
+              UnregisterSubscription,
+              (const rpc::ChannelType channel_type,
+               const SubscriberID &subscriber_id,
+               const absl::optional<std::string> &key_id),
+              (override));
+#else
   MOCK_METHOD(bool,
               RegisterSubscription,
               (const rpc::ChannelType channel_type,
                const SubscriberID &subscriber_id,
                const std::optional<std::string> &key_id),
-              (override));
-  MOCK_METHOD(void, Publish, (const rpc::PubMessage &pub_message), (override));
-  MOCK_METHOD(void,
-              PublishFailure,
-              (const rpc::ChannelType channel_type, const std::string &key_id),
               (override));
   MOCK_METHOD(bool,
               UnregisterSubscription,
@@ -97,7 +126,7 @@ class MockPublisher : public Publisher {
                const SubscriberID &subscriber_id,
                const std::optional<std::string> &key_id),
               (override));
-
+#endif
  private:
 };
 

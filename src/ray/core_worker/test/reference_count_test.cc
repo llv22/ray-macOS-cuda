@@ -241,7 +241,11 @@ class MockDistributedPublisher : public pubsub::PublisherInterface {
 
   bool RegisterSubscription(const rpc::ChannelType channel_type,
                             const pubsub::SubscriberID &subscriber_id,
+#if defined(__APPLE__) && defined(__MACH__)
+                            const absl::optional<std::string> &key_id_binary) {
+#else
                             const std::optional<std::string> &key_id_binary) {
+#endif
     RAY_CHECK(false) << "No need to implement it for testing.";
     return false;
   }
@@ -269,7 +273,11 @@ class MockDistributedPublisher : public pubsub::PublisherInterface {
 
   bool UnregisterSubscription(const rpc::ChannelType channel_type,
                               const pubsub::SubscriberID &subscriber_id,
-                              const std::optional<std::string> &key_id_binary) {
+#if defined(__APPLE__) && defined(__MACH__)
+                            const absl::optional<std::string> &key_id_binary) {
+#else
+                            const std::optional<std::string> &key_id_binary) {
+#endif
     return true;
   }
 

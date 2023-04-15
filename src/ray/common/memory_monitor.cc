@@ -15,7 +15,11 @@
 #include "ray/common/memory_monitor.h"
 
 #include <boost/algorithm/string.hpp>
+#if defined(__APPLE__) && defined(__MACH__)
+#include <boost/filesystem.hpp>
+#else
 #include <filesystem>
+#endif
 #include <fstream>  // std::ifstream
 #include <tuple>
 
@@ -194,6 +198,24 @@ int64_t MemoryMonitor::GetCGroupV2MemoryUsedBytes(const char *stat_path,
 
 std::tuple<int64_t, int64_t> MemoryMonitor::GetCGroupMemoryBytes() {
   int64_t total_bytes = kNull;
+#if defined(__APPLE__) && defined(__MACH__)
+  if (boost::filesystem::exists(kCgroupsV2MemoryMaxPath)) {
+    std::ifstream mem_file(kCgroupsV2MemoryMaxPath, std::ios::in | std::ios::binary);
+    mem_file >> total_bytes;
+  } else if (boost::filesystem::exists(kCgroupsV1MemoryMaxPath)) {
+    std::ifstream mem_file(kCgroupsV1MemoryMaxPath, std::ios::in | std::ios::binary);
+    mem_file >> total_bytes;
+  }
+
+  int64_t used_bytes = kNull;
+  if (boost::filesystem::exists(kCgroupsV2MemoryUsagePath) &&
+      boost::filesystem::exists(kCgroupsV2MemoryStatPath)) {
+    used_bytes =
+        GetCGroupV2MemoryUsedBytes(kCgroupsV2MemoryStatPath, kCgroupsV2MemoryUsagePath);
+  } else if (boost::filesystem::exists(kCgroupsV1MemoryStatPath)) {
+    used_bytes = GetCGroupV1MemoryUsedBytes(kCgroupsV1MemoryStatPath);
+  }
+#else
   if (std::filesystem::exists(kCgroupsV2MemoryMaxPath)) {
     std::ifstream mem_file(kCgroupsV2MemoryMaxPath, std::ios::in | std::ios::binary);
     mem_file >> total_bytes;
@@ -210,6 +232,7 @@ std::tuple<int64_t, int64_t> MemoryMonitor::GetCGroupMemoryBytes() {
   } else if (std::filesystem::exists(kCgroupsV1MemoryStatPath)) {
     used_bytes = GetCGroupV1MemoryUsedBytes(kCgroupsV1MemoryStatPath);
   }
+#endif
 
   /// This can be zero if the memory limit is not set for cgroup v2.
   if (total_bytes == 0) {
@@ -381,6 +404,20 @@ int64_t MemoryMonitor::GetMemoryThreshold(int64_t total_memory_bytes,
 
 const std::vector<pid_t> MemoryMonitor::GetPidsFromDir(const std::string proc_dir) {
   std::vector<pid_t> pids;
+#if defined(__APPLE__) && defined(__MACH__)
+  if (!boost::filesystem::exists(proc_dir)) {
+    RAY_LOG_EVERY_MS(INFO, kLogIntervalMs)
+        << "Proc dir doesn't exist, return no pids. Dir: " << proc_dir;
+    return pids;
+  }
+  for (const auto &file : boost::filesystem::directory_iterator(proc_dir)) {
+    std::string filename{file.path().filename().string()};
+    if (std::all_of(filename.begin(), filename.end(), ::isdigit)) {
+      pids.push_back(static_cast<pid_t>(std::stoi(filename)));
+    }
+  }
+  return pids;
+#else
   if (!std::filesystem::exists(proc_dir)) {
     RAY_LOG_EVERY_MS(INFO, kLogIntervalMs)
         << "Proc dir doesn't exist, return no pids. Dir: " << proc_dir;
@@ -393,6 +430,7 @@ const std::vector<pid_t> MemoryMonitor::GetPidsFromDir(const std::string proc_di
     }
   }
   return pids;
+#endif
 }
 
 const std::string MemoryMonitor::GetCommandLineForPid(pid_t pid,

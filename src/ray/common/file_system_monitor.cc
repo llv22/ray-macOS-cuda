@@ -51,14 +51,27 @@ FileSystemMonitor::~FileSystemMonitor() {
   }
 }
 
+#if defined(__APPLE__) && defined(__MACH__)
+absl::optional<boost::filesystem::space_info> FileSystemMonitor::Space(
+#else
 std::optional<std::filesystem::space_info> FileSystemMonitor::Space(
+#endif
     const std::string &path) const {
+#if defined(__APPLE__) && defined(__MACH__)
+  boost::system::error_code ec;
+  const boost::filesystem::space_info si = boost::filesystem::space(path, ec);
+#else
   std::error_code ec;
   const std::filesystem::space_info si = std::filesystem::space(path, ec);
+#endif
   if (ec) {
     RAY_LOG_EVERY_MS(WARNING, 60 * 1000)
         << "Failed to get capacity of " << path << " with error: " << ec.message();
+#if defined(__APPLE__) && defined(__MACH__)
+  return absl::nullopt;
+#else
     return std::nullopt;
+#endif
   }
   return si;
 }
@@ -88,7 +101,11 @@ bool FileSystemMonitor::CheckIfAnyPathOverCapacity() const {
 
 bool FileSystemMonitor::OverCapacityImpl(
     const std::string &path,
+#if defined(__APPLE__) && defined(__MACH__)
+    const absl::optional<boost::filesystem::space_info> &space_info) const {
+#else
     const std::optional<std::filesystem::space_info> &space_info) const {
+#endif
   if (!space_info.has_value()) {
     return false;
   }

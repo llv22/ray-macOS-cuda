@@ -282,10 +282,18 @@ void GcsPlacementGroupManager::OnPlacementGroupCreationFailed(
       AddToPendingQueue(std::move(placement_group), /* rank */ 0);
     } else if (state == rpc::PlacementGroupTableData::PENDING) {
       stats->set_scheduling_state(rpc::PlacementGroupStats::NO_RESOURCES);
+#if defined(__APPLE__) && defined(__MACH__)
+      AddToPendingQueue(std::move(placement_group), absl::nullopt, backoff);
+#else
       AddToPendingQueue(std::move(placement_group), std::nullopt, backoff);
+#endif
     } else {
       stats->set_scheduling_state(rpc::PlacementGroupStats::REMOVED);
+#if defined(__APPLE__) && defined(__MACH__)
+      AddToPendingQueue(std::move(placement_group), absl::nullopt, backoff);
+#else
       AddToPendingQueue(std::move(placement_group), std::nullopt, backoff);
+#endif
     }
   }
 
@@ -690,8 +698,13 @@ void GcsPlacementGroupManager::WaitPlacementGroup(
 
 void GcsPlacementGroupManager::AddToPendingQueue(
     std::shared_ptr<GcsPlacementGroup> pg,
+#if defined(__APPLE__) && defined(__MACH__)
+    absl::optional<int64_t> rank,
+    absl::optional<ExponentialBackOff> exp_backer) {
+#else
     std::optional<int64_t> rank,
     std::optional<ExponentialBackOff> exp_backer) {
+#endif
   if (!rank) {
     rank = absl::GetCurrentTimeNanos();
   }

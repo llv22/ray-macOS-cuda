@@ -338,9 +338,15 @@ void Publisher::ConnectToSubscriber(const rpc::PubsubLongPollingRequest &request
   subscriber->ConnectToSubscriber(request, reply, std::move(send_reply_callback));
 }
 
+#if defined(__APPLE__) && defined(__MACH__)
+bool Publisher::RegisterSubscription(const rpc::ChannelType channel_type,
+                                     const SubscriberID &subscriber_id,
+                                     const absl::optional<std::string> &key_id) {
+#else
 bool Publisher::RegisterSubscription(const rpc::ChannelType channel_type,
                                      const SubscriberID &subscriber_id,
                                      const std::optional<std::string> &key_id) {
+#endif
   absl::MutexLock lock(&mutex_);
   auto it = subscribers_.find(subscriber_id);
   if (it == subscribers_.end()) {
@@ -378,9 +384,15 @@ void Publisher::PublishFailure(const rpc::ChannelType channel_type,
   Publish(pub_message);
 }
 
+#if defined(__APPLE__) && defined(__MACH__)
+bool Publisher::UnregisterSubscription(const rpc::ChannelType channel_type,
+                                       const SubscriberID &subscriber_id,
+                                       const absl::optional<std::string> &key_id) {
+#else
 bool Publisher::UnregisterSubscription(const rpc::ChannelType channel_type,
                                        const SubscriberID &subscriber_id,
                                        const std::optional<std::string> &key_id) {
+#endif
   absl::MutexLock lock(&mutex_);
   auto subscription_index_it = subscription_index_map_.find(channel_type);
   RAY_CHECK(subscription_index_it != subscription_index_map_.end());

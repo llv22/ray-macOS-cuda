@@ -251,9 +251,15 @@ class PublisherInterface {
   /// \param key_id The key_id that the subscriber is subscribing to. std::nullopt if
   /// subscribing to all.
   /// \return True if registration is new. False otherwise.
+  #if defined(__APPLE__) && defined(__MACH__)
+  virtual bool RegisterSubscription(const rpc::ChannelType channel_type,
+                                    const SubscriberID &subscriber_id,
+                                    const absl::optional<std::string> &key_id) = 0;
+  #else
   virtual bool RegisterSubscription(const rpc::ChannelType channel_type,
                                     const SubscriberID &subscriber_id,
                                     const std::optional<std::string> &key_id) = 0;
+  #endif                                
 
   /// Publish the given object id to subscribers.
   ///
@@ -276,9 +282,15 @@ class PublisherInterface {
   /// \param subscriber_id The node id of the subscriber.
   /// \param key_id The key_id of the subscriber. std::nullopt if subscribing to all.
   /// \return True if erased. False otherwise.
+  #if defined(__APPLE__) && defined(__MACH__)
+  virtual bool UnregisterSubscription(const rpc::ChannelType channel_type,
+                                      const SubscriberID &subscriber_id,
+                                      const absl::optional<std::string> &key_id) = 0;
+  #else
   virtual bool UnregisterSubscription(const rpc::ChannelType channel_type,
                                       const SubscriberID &subscriber_id,
                                       const std::optional<std::string> &key_id) = 0;
+  #endif
 };
 
 /// Protocol detail
@@ -342,9 +354,15 @@ class Publisher : public PublisherInterface {
   /// \param subscriber_id The node id of the subscriber.
   /// \param key_id The key_id that the subscriber is subscribing to.
   /// \return True if the registration is new. False otherwise.
+  #if defined(__APPLE__) && defined(__MACH__)
+  bool RegisterSubscription(const rpc::ChannelType channel_type,
+                            const SubscriberID &subscriber_id,
+                            const absl::optional<std::string> &key_id) override;
+  #else
   bool RegisterSubscription(const rpc::ChannelType channel_type,
                             const SubscriberID &subscriber_id,
                             const std::optional<std::string> &key_id) override;
+  #endif
 
   /// Publish the given object id to subscribers.
   ///
@@ -367,9 +385,15 @@ class Publisher : public PublisherInterface {
   /// \param subscriber_id The node id of the subscriber.
   /// \param key_id The key_id of the subscriber.
   /// \return True if erased. False otherwise.
+  #if defined(__APPLE__) && defined(__MACH__)
+  bool UnregisterSubscription(const rpc::ChannelType channel_type,
+                              const SubscriberID &subscriber_id,
+                              const absl::optional<std::string> &key_id) override;
+  #else
   bool UnregisterSubscription(const rpc::ChannelType channel_type,
                               const SubscriberID &subscriber_id,
                               const std::optional<std::string> &key_id) override;
+  #endif
 
   /// Remove the subscriber. Once the subscriber is removed, messages won't be published
   /// to it anymore.

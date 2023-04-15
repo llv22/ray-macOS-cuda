@@ -169,8 +169,13 @@ class NodeManager : public rpc::NodeManagerServiceHandler,
 
   void ConsumeSyncMessage(std::shared_ptr<const syncer::RaySyncMessage> message) override;
 
+#if defined(__APPLE__) && defined(__MACH__)
+  absl::optional<syncer::RaySyncMessage> CreateSyncMessage(
+      int64_t after_version, syncer::MessageType message_type) const override;
+#else
   std::optional<syncer::RaySyncMessage> CreateSyncMessage(
       int64_t after_version, syncer::MessageType message_type) const override;
+#endif
 
   int GetObjectManagerPort() const { return object_manager_.GetServerPort(); }
 

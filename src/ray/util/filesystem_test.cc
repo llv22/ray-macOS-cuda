@@ -14,7 +14,11 @@
 
 #include "ray/util/filesystem.h"
 
+#if defined(__APPLE__) && defined(__MACH__)
+#include <boost/filesystem.hpp>
+#else
 #include <filesystem>
+#endif
 
 #include "gtest/gtest.h"
 #include "ray/common/file_system_monitor.h"
@@ -28,7 +32,11 @@ std::string JoinPaths(std::string base, Paths... components) {
   for (size_t i = 0; i < sizeof(to_append) / sizeof(*to_append); ++i) {
     const std::string &s = to_append[i];
     if (!base.empty() && !IsDirSep(base.back()) && !s.empty() && !IsDirSep(s[0])) {
+#if defined(__APPLE__) && defined(__MACH__)
+      base += boost::filesystem::path::preferred_separator;
+#else
       base += std::filesystem::path::preferred_separator;
+#endif
     }
     base += s;
   }
@@ -67,7 +75,11 @@ TEST(FileSystemTest, JoinPathTest) {
 }
 
 TEST(FileSystemTest, TestFileSystemMonitor) {
+#if defined(__APPLE__) && defined(__MACH__)
+  std::string tmp_path = boost::filesystem::temp_directory_path().string();
+#else
   std::string tmp_path = std::filesystem::temp_directory_path().string();
+#endif
   {
     ray::FileSystemMonitor monitor({tmp_path}, 1);
     ASSERT_FALSE(monitor.OverCapacity());
@@ -91,6 +103,21 @@ TEST(FileSystemTest, TestFileSystemMonitor) {
 }
 
 TEST(FileSystemTest, TestOverCapacity) {
+#if defined(__APPLE__) && defined(__MACH__)
+  std::string tmp_path = boost::filesystem::temp_directory_path().string();
+  FileSystemMonitor monitor({tmp_path}, 0.1);
+  ASSERT_FALSE(monitor.OverCapacityImpl(tmp_path, std::nullopt));
+  ASSERT_FALSE(monitor.OverCapacityImpl(
+      tmp_path,
+      {boost::filesystem::space_info{
+          /* capacity */ 11, /* free */ 10, /* available */ 10}}));
+  ASSERT_TRUE(monitor.OverCapacityImpl(
+      tmp_path,
+      {boost::filesystem::space_info{/* capacity */ 11, /* free */ 9, /* available */ 9}}));
+  ASSERT_TRUE(monitor.OverCapacityImpl(
+      tmp_path,
+      {boost::filesystem::space_info{/* capacity */ 0, /* free */ 0, /* available */ 0}}));
+#else
   std::string tmp_path = std::filesystem::temp_directory_path().string();
   FileSystemMonitor monitor({tmp_path}, 0.1);
   ASSERT_FALSE(monitor.OverCapacityImpl(tmp_path, std::nullopt));
@@ -104,6 +131,7 @@ TEST(FileSystemTest, TestOverCapacity) {
   ASSERT_TRUE(monitor.OverCapacityImpl(
       tmp_path,
       {std::filesystem::space_info{/* capacity */ 0, /* free */ 0, /* available */ 0}}));
+#endif
 }
 
 TEST(FileSystemTest, ParseLocalSpillingPaths) {

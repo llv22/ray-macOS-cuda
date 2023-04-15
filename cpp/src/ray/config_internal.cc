@@ -15,8 +15,16 @@
 #include "config_internal.h"
 
 #include <boost/dll/runtime_symbol_info.hpp>
+#if defined(__APPLE__) && defined(__MACH__)
+#include "absl/strings/charconv.h"
+#else
 #include <charconv>
+#endif
+#if defined(__APPLE__) && defined(__MACH__)
+#include <boost/filesystem.hpp>
+#else
 #include <filesystem>
+#endif
 
 #include "absl/flags/flag.h"
 #include "absl/flags/parse.h"
@@ -199,7 +207,11 @@ void ConfigInternal::Init(RayConfig &config, int argc, char **argv) {
       // driver.
       std::vector<std::string> absolute_path;
       for (const auto &path : code_search_path) {
+#if defined(__APPLE__) && defined(__MACH__)
+        absolute_path.emplace_back(boost::filesystem::absolute(path).string());
+#else
         absolute_path.emplace_back(std::filesystem::absolute(path).string());
+#endif
       }
       code_search_path = absolute_path;
     }
@@ -223,8 +235,14 @@ void ConfigInternal::SetBootstrapAddress(std::string_view address) {
   auto pos = address.find(':');
   RAY_CHECK(pos != std::string::npos);
   bootstrap_ip = address.substr(0, pos);
+#if defined(__APPLE__) && defined(__MACH__)
+  double double_bootstrap_port = static_cast<double>(bootstrap_port);
+  auto ret = absl::from_chars(
+      address.data() + pos + 1, address.data() + address.size(), double_bootstrap_port, absl::chars_format::general);
+#else
   auto ret = std::from_chars(
       address.data() + pos + 1, address.data() + address.size(), bootstrap_port);
+#endif
   RAY_CHECK(ret.ec == std::errc());
 }
 

@@ -48,10 +48,19 @@ class LocalNode : public ReporterInterface {
         1000);
   }
 
+#if defined(__APPLE__) && defined(__MACH__)
+  absl::optional<RaySyncMessage> CreateSyncMessage(int64_t current_version,
+                                                  MessageType) const override {
+#else
   std::optional<RaySyncMessage> CreateSyncMessage(int64_t current_version,
                                                   MessageType) const override {
+#endif                                            
     if (current_version > version_) {
+#if defined(__APPLE__) && defined(__MACH__)
+      return absl::nullopt;
+#else
       return std::nullopt;
+#endif
     }
     ray::rpc::syncer::RaySyncMessage msg;
     msg.set_message_type(ray::rpc::syncer::MessageType::RESOURCE_VIEW);

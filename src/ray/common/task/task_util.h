@@ -119,7 +119,11 @@ class TaskSpecBuilder {
       const Language &language,
       const ray::FunctionDescriptor &function_descriptor,
       const JobID &job_id,
+#if defined(__APPLE__) && defined(__MACH__)
+      absl::optional<rpc::JobConfig> job_config,
+#else
       std::optional<rpc::JobConfig> job_config,
+#endif
       const TaskID &parent_task_id,
       uint64_t parent_counter,
       const TaskID &caller_id,

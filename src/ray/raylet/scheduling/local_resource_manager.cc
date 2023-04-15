@@ -365,7 +365,11 @@ double LocalResourceManager::GetLocalAvailableCpus() const {
   return local_resources_.available.Sum(ResourceID::CPU()).Double();
 }
 
+#if defined(__APPLE__) && defined(__MACH__)
+absl::optional<syncer::RaySyncMessage> LocalResourceManager::CreateSyncMessage(
+#else
 std::optional<syncer::RaySyncMessage> LocalResourceManager::CreateSyncMessage(
+#endif
     int64_t after_version, syncer::MessageType message_type) const {
   RAY_CHECK(message_type == syncer::MessageType::RESOURCE_VIEW);
   // We check the memory inside version, so version is not a const function.
@@ -374,7 +378,11 @@ std::optional<syncer::RaySyncMessage> LocalResourceManager::CreateSyncMessage(
   const_cast<LocalResourceManager *>(this)->UpdateAvailableObjectStoreMemResource();
 
   if (version_ <= after_version) {
+#if defined(__APPLE__) && defined(__MACH__)
+    return absl::nullopt;
+#else
     return std::nullopt;
+#endif
   }
 
   syncer::RaySyncMessage msg;
@@ -409,7 +417,11 @@ std::optional<syncer::RaySyncMessage> LocalResourceManager::CreateSyncMessage(
   std::string serialized_msg;
   RAY_CHECK(resources_data.SerializeToString(&serialized_msg));
   msg.set_sync_message(std::move(serialized_msg));
+#if defined(__APPLE__) && defined(__MACH__)
+  return absl::make_optional(std::move(msg));
+#else
   return std::make_optional(std::move(msg));
+#endif
 }
 
 ray::gcs::NodeResourceInfoAccessor::ResourceMap LocalResourceManager::GetResourceTotals(

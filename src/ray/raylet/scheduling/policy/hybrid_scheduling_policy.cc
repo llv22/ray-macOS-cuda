@@ -65,7 +65,11 @@ float HybridSchedulingPolicy::ComputeNodeScore(const scheduling::NodeID &node_id
 scheduling::NodeID HybridSchedulingPolicy::GetBestNode(
     std::vector<std::pair<scheduling::NodeID, float>> &node_scores,
     size_t num_candidate_nodes,
+#if defined(__APPLE__) && defined(__MACH__)
+    absl::optional<scheduling::NodeID> preferred_node_id,
+#else
     std::optional<scheduling::NodeID> preferred_node_id,
+#endif
     float preferred_node_score) const {
   RAY_CHECK(!node_scores.empty());
   RAY_CHECK(num_candidate_nodes >= 1);
@@ -162,21 +166,36 @@ scheduling::NodeID HybridSchedulingPolicy::ScheduleImpl(
   if (!available_nodes.empty()) {
     bool prioritize_preferred_node = !force_spillback && preferred_node_is_available;
     // First prioritize available nodes.
+#if defined(__APPLE__) && defined(__MACH__)
+    return GetBestNode(available_nodes,
+                       num_candidate_nodes,
+                       prioritize_preferred_node
+                           ? absl::optional<scheduling::NodeID>(preferred_node_id)
+                           : absl::optional<scheduling::NodeID>(),
+                       ComputeNodeScore(preferred_node_id, spread_threshold));
+#else
     return GetBestNode(available_nodes,
                        num_candidate_nodes,
                        prioritize_preferred_node
                            ? std::optional<scheduling::NodeID>(preferred_node_id)
                            : std::optional<scheduling::NodeID>(),
                        ComputeNodeScore(preferred_node_id, spread_threshold));
+#endif                      
   } else if (!feasible_and_unavailable_nodes.empty() && !require_node_available) {
     bool prioritize_preferred_node = !force_spillback && preferred_node_is_feasible;
     // If there are no available nodes, and the caller is okay with an
     // unavailable node, check the feasible nodes next.
     return GetBestNode(feasible_and_unavailable_nodes,
                        num_candidate_nodes,
+#if defined(__APPLE__) && defined(__MACH__)
+                       prioritize_preferred_node
+                           ? absl::optional<scheduling::NodeID>(preferred_node_id)
+                           : absl::optional<scheduling::NodeID>(),
+#else
                        prioritize_preferred_node
                            ? std::optional<scheduling::NodeID>(preferred_node_id)
                            : std::optional<scheduling::NodeID>(),
+#endif
                        ComputeNodeScore(preferred_node_id, spread_threshold));
   } else {
     return scheduling::NodeID::Nil();

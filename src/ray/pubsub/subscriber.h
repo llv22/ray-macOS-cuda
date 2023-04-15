@@ -82,7 +82,11 @@ class SubscriberChannel {
   /// \param subscription_failure_callback A callback that is
   /// invoked whenever the publisher is dead (or failed).
   bool Subscribe(const rpc::Address &publisher_address,
+#if defined(__APPLE__) && defined(__MACH__)
+                 const absl::optional<std::string> &key_id,
+#else
                  const std::optional<std::string> &key_id,
+#endif
                  SubscriptionItemCallback subscription_item_callback,
                  SubscriptionFailureCallback subscription_failure_callback);
 
@@ -92,8 +96,13 @@ class SubscriberChannel {
   /// \param publisher_address The publisher address that it will unsubscribe to.
   /// \param key_id The entity id to unsubscribe.
   /// \return True if the publisher is unsubscribed.
+#if defined(__APPLE__) && defined(__MACH__)
+  bool Unsubscribe(const rpc::Address &publisher_address,
+                   const absl::optional<std::string> &key_id);
+#else
   bool Unsubscribe(const rpc::Address &publisher_address,
                    const std::optional<std::string> &key_id);
+#endif
 
   /// Test only.
   /// Checks if the entity key_id is being subscribed to specifically.
@@ -410,7 +419,11 @@ class Subscriber : public SubscriberInterface {
   bool SubscribeInternal(std::unique_ptr<rpc::SubMessage> sub_message,
                          const rpc::ChannelType channel_type,
                          const rpc::Address &publisher_address,
+#if defined(__APPLE__) && defined(__MACH__)
+                         const absl::optional<std::string> &key_id,
+#else
                          const std::optional<std::string> &key_id,
+#endif
                          SubscribeDoneCallback subscribe_done_callback,
                          SubscriptionItemCallback subscription_callback,
                          SubscriptionFailureCallback subscription_failure_callback);

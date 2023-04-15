@@ -17,10 +17,17 @@ namespace syncer {
 
 class MockReporterInterface : public ReporterInterface {
  public:
+#if defined(__APPLE__) && defined(__MACH__)
+  MOCK_METHOD(absl::optional<RaySyncMessage>,
+              CreateSyncMessage,
+              (int64_t current_version, MessageType message_type),
+              (const, override));
+#else
   MOCK_METHOD(std::optional<RaySyncMessage>,
               CreateSyncMessage,
               (int64_t current_version, MessageType message_type),
               (const, override));
+#endif
 };
 
 }  // namespace syncer

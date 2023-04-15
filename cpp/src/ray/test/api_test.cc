@@ -15,7 +15,11 @@
 #include <gtest/gtest.h>
 #include <ray/api.h>
 
+#if defined(__APPLE__) && defined(__MACH__)
+#include <boost/filesystem.hpp>
+#else
 #include <filesystem>
+#endif
 #include <fstream>
 #include <future>
 #include <thread>
@@ -110,6 +114,28 @@ RAY_REMOTE(Counter::FactoryCreate,
            &Counter::GetList);
 
 TEST(RayApiTest, LogTest) {
+#if defined(__APPLE__) && defined(__MACH__)
+  auto log_path = boost::filesystem::current_path().string() + "/tmp/";
+  ray::RayLog::StartRayLog("cpp_worker", ray::RayLogLevel::DEBUG, log_path);
+  std::array<std::string, 3> str_arr{"debug test", "info test", "warning test"};
+  RAYLOG(DEBUG) << str_arr[0];
+  RAYLOG(INFO) << str_arr[1];
+  RAYLOG(WARNING) << str_arr[2];
+  RAY_CHECK(true);
+
+  for (auto &it : boost::filesystem::directory_iterator(log_path)) {
+    if (!boost::filesystem::is_directory(it)) {
+      std::ifstream in(it.path().string(), std::ios::binary);
+      std::string line;
+      for (int i = 0; i < 3; i++) {
+        std::getline(in, line);
+        EXPECT_TRUE(line.find(str_arr[i]) != std::string::npos);
+      }
+    }
+  }
+
+  boost::filesystem::remove_all(log_path);
+#else
   auto log_path = std::filesystem::current_path().string() + "/tmp/";
   ray::RayLog::StartRayLog("cpp_worker", ray::RayLogLevel::DEBUG, log_path);
   std::array<std::string, 3> str_arr{"debug test", "info test", "warning test"};
@@ -130,6 +156,7 @@ TEST(RayApiTest, LogTest) {
   }
 
   std::filesystem::remove_all(log_path);
+#endif
 }
 
 TEST(RayApiTest, TaskOptionsCheckTest) {

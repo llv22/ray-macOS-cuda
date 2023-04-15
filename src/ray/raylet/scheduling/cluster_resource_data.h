@@ -481,7 +481,11 @@ struct Node {
     return &local_view_;
   }
 
+#if defined(__APPLE__) && defined(__MACH__)
+  absl::optional<absl::Time> GetViewModifiedTs() const { return local_view_modified_ts_; }
+#else
   std::optional<absl::Time> GetViewModifiedTs() const { return local_view_modified_ts_; }
+#endif
 
   const NodeResources &GetLocalView() const { return local_view_; }
 
@@ -494,7 +498,11 @@ struct Node {
   /// resources when light heartbeats are enabled.
   NodeResources local_view_;
   /// The timestamp this node got updated.
+#if defined(__APPLE__) && defined(__MACH__)
+  absl::optional<absl::Time> local_view_modified_ts_;
+#else
   std::optional<absl::Time> local_view_modified_ts_;
+#endif
 };
 
 /// \request Conversion result to a ResourceRequest data structure.

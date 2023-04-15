@@ -62,17 +62,31 @@ class MockSubscriber : public pubsub::SubscriberInterface {
 
 class MockPublisher : public pubsub::PublisherInterface {
  public:
+#if defined(__APPLE__) && defined(__MACH__)
+  MOCK_METHOD3(RegisterSubscription,
+               bool(const rpc::ChannelType channel_type,
+                    const pubsub::SubscriberID &subscriber_id,
+                    const absl::optional<std::string> &key_id));
+#else
   MOCK_METHOD3(RegisterSubscription,
                bool(const rpc::ChannelType channel_type,
                     const pubsub::SubscriberID &subscriber_id,
                     const std::optional<std::string> &key_id));
+#endif
 
   MOCK_METHOD1(Publish, void(const rpc::PubMessage &pub_message));
 
+#if defined(__APPLE__) && defined(__MACH__)
+  MOCK_METHOD3(UnregisterSubscription,
+               bool(const rpc::ChannelType channel_type,
+                    const pubsub::SubscriberID &subscriber_id,
+                    const absl::optional<std::string> &key_id));
+#else
   MOCK_METHOD3(UnregisterSubscription,
                bool(const rpc::ChannelType channel_type,
                     const pubsub::SubscriberID &subscriber_id,
                     const std::optional<std::string> &key_id));
+#endif
 
   MOCK_METHOD2(PublishFailure,
                void(const rpc::ChannelType channel_type, const std::string &key_id));

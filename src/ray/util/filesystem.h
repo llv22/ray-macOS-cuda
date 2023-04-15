@@ -14,7 +14,12 @@
 
 #pragma once
 
+// check via https://stackoverflow.com/questions/1617877/how-to-detect-llvm-and-its-version-through-define-directives, echo 'echo | clang -dM -E -'
+#if defined(__APPLE__) && defined(__MACH__)
+#include <boost/filesystem.hpp>
+#else
 #include <filesystem>
+#endif
 #include <optional>
 #include <string>
 #include <utility>
@@ -35,7 +40,11 @@ std::string GetUserTempDir();
 
 /// \return Whether or not the given character is a directory separator on this platform.
 static inline bool IsDirSep(char ch) {
+#if defined(__APPLE__) && defined(__MACH__)
+  bool result = ch == '/';
+#else
   bool result = ch == std::filesystem::path::preferred_separator;
+#endif
 #ifdef _WIN32
   result |= ch == GetAltDirSep();
 #endif
@@ -46,6 +55,17 @@ static inline bool IsDirSep(char ch) {
 template <class... Paths>
 std::string JoinPaths(std::string base, const Paths &...components) {
   auto join = [](auto &joined_path, const auto &component) {
+#if defined(__APPLE__) && defined(__MACH__)
+    // if the components begin with "/" or "////", just get the path name.
+    if (!component.empty() &&
+        component.front() == boost::filesystem::path::preferred_separator) {
+      joined_path = boost::filesystem::path(std::string(joined_path).c_str())
+                        .append(boost::filesystem::path(std::string(component).c_str()).filename().string())
+                        .string();
+    } else {
+      joined_path = boost::filesystem::path(joined_path).append(component).string();
+    }
+#else
     // if the components begin with "/" or "////", just get the path name.
     if (!component.empty() &&
         component.front() == std::filesystem::path::preferred_separator) {
@@ -55,8 +75,9 @@ std::string JoinPaths(std::string base, const Paths &...components) {
     } else {
       joined_path = std::filesystem::path(joined_path).append(component).string();
     }
+#endif
   };
-  (join(base, std::string_view(components)), ...);
+  (join(base, std::string_view(std::string(components).c_str())), ...);
   return base;
 }
 }  // namespace ray

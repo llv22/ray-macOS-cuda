@@ -42,10 +42,17 @@ TEST(TestCallbackReply, TestParseAsStringArray) {
     redis_reply_array_elements[1] = &redis_reply_string2;
     redis_reply_array.element = redis_reply_array_elements;
     CallbackReply callback_reply(&redis_reply_array);
+#if defined(__APPLE__) && defined(__MACH__)
+    ASSERT_EQ(
+        callback_reply.ReadAsStringArray(),
+        (std::vector<absl::optional<std::string>>{absl::optional<std::string>(string1),
+                                                 absl::optional<std::string>(string2)}));
+#else
     ASSERT_EQ(
         callback_reply.ReadAsStringArray(),
         (std::vector<std::optional<std::string>>{std::optional<std::string>(string1),
                                                  std::optional<std::string>(string2)}));
+#endif                                            
   }
 
   {
@@ -69,11 +76,20 @@ TEST(TestCallbackReply, TestParseAsStringArray) {
     redis_reply_array_elements[2] = &redis_reply_nil2;
     redis_reply_array.element = redis_reply_array_elements;
     CallbackReply callback_reply(&redis_reply_array);
+
+#if defined(__APPLE__) && defined(__MACH__)
+    ASSERT_EQ(
+        callback_reply.ReadAsStringArray(),
+        (std::vector<absl::optional<std::string>>{absl::optional<std::string>(),
+                                                 absl::optional<std::string>(string1),
+                                                 absl::optional<std::string>()}));
+#else
     ASSERT_EQ(
         callback_reply.ReadAsStringArray(),
         (std::vector<std::optional<std::string>>{std::optional<std::string>(),
                                                  std::optional<std::string>(string1),
                                                  std::optional<std::string>()}));
+#endif                                            
   }
 }
 }  // namespace ray::gcs

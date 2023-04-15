@@ -25,6 +25,7 @@
 #include <sstream>
 #include <string>
 #include <vector>
+#include <iomanip>
 #ifndef _WIN32
 #include <boost/asio/local/stream_protocol.hpp>
 #endif

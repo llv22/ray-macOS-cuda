@@ -29,9 +29,15 @@ class StoreClientInternalKV : public InternalKVInterface {
  public:
   explicit StoreClientInternalKV(std::unique_ptr<StoreClient> store_client);
 
+#if defined(__APPLE__) && defined(__MACH__)
+  void Get(const std::string &ns,
+           const std::string &key,
+           std::function<void(absl::optional<std::string>)> callback) override;
+#else
   void Get(const std::string &ns,
            const std::string &key,
            std::function<void(std::optional<std::string>)> callback) override;
+#endif
 
   void MultiGet(const std::string &ns,
                 const std::vector<std::string> &keys,

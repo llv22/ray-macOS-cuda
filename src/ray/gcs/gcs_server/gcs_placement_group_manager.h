@@ -209,7 +209,11 @@ class GcsPlacementGroup {
   std::shared_ptr<CounterMap<rpc::PlacementGroupTableData::PlacementGroupState>> counter_;
 
   /// The last recorded metric state.
+#if defined(__APPLE__) && defined(__MACH__)
+  absl::optional<rpc::PlacementGroupTableData::PlacementGroupState> last_metric_state_;
+#else
   std::optional<rpc::PlacementGroupTableData::PlacementGroupState> last_metric_state_;
+#endif
 };
 
 /// GcsPlacementGroupManager is responsible for managing the lifecycle of all placement
@@ -379,9 +383,15 @@ class GcsPlacementGroupManager : public rpc::PlacementGroupInfoHandler {
   /// priority.
   /// \param exp_backer The exponential backoff. A default one will be given if
   /// it's not set. This will be used to generate the deferred time for this pg.
+#if defined(__APPLE__) && defined(__MACH__)
+  void AddToPendingQueue(std::shared_ptr<GcsPlacementGroup> pg,
+                         absl::optional<int64_t> rank = absl::nullopt,
+                         absl::optional<ExponentialBackOff> exp_backer = absl::nullopt);
+#else
   void AddToPendingQueue(std::shared_ptr<GcsPlacementGroup> pg,
                          std::optional<int64_t> rank = std::nullopt,
                          std::optional<ExponentialBackOff> exp_backer = std::nullopt);
+#endif
   void RemoveFromPendingQueue(const PlacementGroupID &pg_id);
 
   /// Try to create placement group after a short time.

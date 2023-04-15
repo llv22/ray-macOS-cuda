@@ -18,7 +18,11 @@
 
 #include <boost/filesystem.hpp>
 #include <boost/thread/latch.hpp>
+#if defined(__APPLE__) && defined(__MACH__)
+#include <boost/filesystem.hpp>
+#else
 #include <filesystem>
+#endif
 #include <fstream>
 
 #include "gtest/gtest.h"

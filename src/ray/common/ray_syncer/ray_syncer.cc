@@ -37,13 +37,25 @@ bool NodeState::SetComponent(MessageType message_type,
   }
 }
 
+#if defined(__APPLE__) && defined(__MACH__)
+absl::optional<RaySyncMessage> NodeState::CreateSyncMessage(MessageType message_type) {
+#else
 std::optional<RaySyncMessage> NodeState::CreateSyncMessage(MessageType message_type) {
+#endif
   if (reporters_[message_type] == nullptr) {
+#if defined(__APPLE__) && defined(__MACH__)
+  return absl::nullopt;
+#else
     return std::nullopt;
+#endif
   }
   auto message = reporters_[message_type]->CreateSyncMessage(
       sync_message_versions_taken_[message_type], message_type);
+#if defined(__APPLE__) && defined(__MACH__)
+  if (message != absl::nullopt) {
+#else
   if (message != std::nullopt) {
+#endif
     sync_message_versions_taken_[message_type] = message->version();
     RAY_LOG(DEBUG) << "Sync message taken: message_type:" << message_type
                    << ", version:" << message->version()

@@ -84,11 +84,19 @@ class HybridSchedulingPolicy : public ISchedulingPolicy {
   /// the more preferable.
   float ComputeNodeScore(const scheduling::NodeID &node_id, float spread_threshold) const;
 
+#if defined(__APPLE__) && defined(__MACH__)
+  scheduling::NodeID GetBestNode(
+      std::vector<std::pair<scheduling::NodeID, float>> &node_scores,
+      size_t num_candidate_nodes,
+      absl::optional<scheduling::NodeID> preferred_node_id,
+      float preferred_node_score) const;
+#else
   scheduling::NodeID GetBestNode(
       std::vector<std::pair<scheduling::NodeID, float>> &node_scores,
       size_t num_candidate_nodes,
       std::optional<scheduling::NodeID> preferred_node_id,
       float preferred_node_score) const;
+#endif
 
   /// \param resource_request: The resource request we're attempting to schedule.
   /// \param spread_threshold: The fraction of resource utilization on a node after

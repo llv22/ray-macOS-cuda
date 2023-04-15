@@ -172,6 +172,16 @@ class LocalObjectManager {
   std::string DebugString() const;
 
  private:
+#if defined(__APPLE__) && defined(__MACH__)
+  struct LocalObjectInfo {
+    LocalObjectInfo(const rpc::Address &owner_address,
+                    const ObjectID &generator_id,
+                    size_t object_size)
+        : owner_address(owner_address),
+          generator_id(generator_id.IsNil() ? absl::nullopt
+                                            : absl::optional<ObjectID>(generator_id)),
+          object_size(object_size) {}
+#else
   struct LocalObjectInfo {
     LocalObjectInfo(const rpc::Address &owner_address,
                     const ObjectID &generator_id,
@@ -180,9 +190,14 @@ class LocalObjectManager {
           generator_id(generator_id.IsNil() ? std::nullopt
                                             : std::optional<ObjectID>(generator_id)),
           object_size(object_size) {}
+#endif
     rpc::Address owner_address;
     bool is_freed = false;
+#if defined(__APPLE__) && defined(__MACH__)
+    const absl::optional<ObjectID> generator_id;
+#else
     const std::optional<ObjectID> generator_id;
+#endif
     size_t object_size;
   };
 

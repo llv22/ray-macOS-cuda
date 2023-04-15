@@ -45,7 +45,11 @@ class NodeState {
   /// \param message_type The component to take the snapshot.
   ///
   /// \return If a snapshot is taken, return the message, otherwise std::nullopt.
+#if defined(__APPLE__) && defined(__MACH__)
+  absl::optional<RaySyncMessage> CreateSyncMessage(MessageType message_type);
+#else
   std::optional<RaySyncMessage> CreateSyncMessage(MessageType message_type);
+#endif
 
   /// Consume a message. Receiver will consume this message if it doesn't have
   /// this message.

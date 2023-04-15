@@ -12,7 +12,11 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+#if defined(__APPLE__) && defined(__MACH__)
+#include <boost/filesystem.hpp>
+#else
 #include <filesystem>
+#endif
 
 #include "gtest/gtest.h"
 #include "ray/object_manager/plasma/plasma_allocator.h"
@@ -23,7 +27,11 @@ namespace plasma {
 namespace {
 const int64_t kMB = 1024 * 1024;
 std::string CreateTestDir() {
+#if defined(__APPLE__) && defined(__MACH__)
+  path directory = boost::filesystem::temp_directory_path() / GenerateUUIDV4();
+#else
   path directory = std::filesystem::temp_directory_path() / GenerateUUIDV4();
+#endif
   create_directories(directory);
   return directory.string();
 }
