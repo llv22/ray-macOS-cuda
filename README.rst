@@ -1,3 +1,12 @@
+<!-- markdownlint-disable MD033 -->
+<!-- markdownlint-disable MD004 -->
+<!-- markdownlint-disable MD029 -->
+# Ray 2.3.1 on macOS 10.13.6
+--------------------------------------------------------------------------------
+In order to avoid breaking the building environment for pytorch with eGPU support on 10.13.6, I replace std::filesystem with boost::filesystem, nullptr support from std as well as charconv implementation to absl. Now ray can be natively built on macOS 10.13.6. Other functionalities remain intact as original version.
+
+--------------------------------------------------------------------------------
+
 .. image:: https://github.com/ray-project/ray/raw/master/doc/source/images/ray_header_logo.png
 
 .. image:: https://readthedocs.org/projects/ray/badge/?version=master
